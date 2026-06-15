@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Hub Unlocker</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background-color: #0b0f14;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        .banner {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .alert-box {
+            border: 2px solid #00F0FF;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #111a24;
+            margin-bottom: 20px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        .steps-bar {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .step-tab {
+            background: #1c232e;
+            padding: 10px 0;
+            flex: 1;
+            margin: 0 5px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #888;
+            transition: all 0.3s ease;
+        }
+        .step-tab.active {
+            background: #2a3547;
+            color: #00F0FF;
+            border: 1px solid #00F0FF;
+        }
+        .step-tab.completed {
+            background: #00b4d8;
+            color: white;
+        }
+        .action-btn {
+            background-color: #7A00FF;
+            color: white;
+            border: none;
+            padding: 16px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(122, 0, 255, 0.4);
+            transition: transform 0.1s ease;
+        }
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+        .secondary-btn {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600" class="banner" alt="Banner">
+        
+        <div id="status-alert" class="alert-box">
+            📢 Complete 4 Steps, the Movie Search Panel will be unlocked. Then click again to access files!
+        </div>
+
+        <div class="steps-bar">
+            <div id="step1" class="step-tab active">Step 1</div>
+            <div id="step2" class="step-tab">Step 2</div>
+            <div id="step3" class="step-tab">Step 3</div>
+            <div id="step4" class="step-tab">Step 4</div>
+        </div>
+
+        <button id="main-action-btn" class="action-btn" onclick="handleAdClick()">
+            Watch Ads to Unlock Movies
+        </button>
+
+        <button class="action-btn secondary-btn" onclick="joinChannel()">
+            Join Movie Channel
+        </button>
+        <button class="action-btn secondary-btn" onclick="howToUse()">
+            How to use this Bot 📖
+        </button>
+    </div>
+
+    <script>
+        // Initialize Telegram WebApp engine
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Force the Mini App view to display full-screen
+
+        // CONFIGURATION: Replace this link with your actual Monetag SmartLink/Direct Link URL later
+        const MONETAG_SMARTLINK = "https://www.google.com"; 
+
+        let currentStep = 1;
+
+        function handleAdClick() {
+            if (currentStep <= 4) {
+                // 1. Open the Monetag ad in the user's default app browser
+                tg.openLink(MONETAG_SMARTLINK);
+
+                // 2. Mark the current step tab UI block as completed
+                const activeTab = document.getElementById(`step${currentStep}`);
+                activeTab.classList.remove('active');
+                activeTab.classList.add('completed');
+
+                // 3. Increment step order
+                currentStep++;
+
+                if (currentStep <= 4) {
+                    // Set next step tab as active layout focus
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                } else {
+                    // 4. Update interface once Step 4 is complete
+                    document.getElementById('status-alert').style.borderColor = "#00FF66";
+                    document.getElementById('status-alert').style.background = "#0c2417";
+                    document.getElementById('status-alert').innerHTML = "✅ **Success! 2-Hour Download Pass Activated.**\nClick below to return and search any movie.";
+                    
+                    const mainBtn = document.getElementById('main-action-btn');
+                    mainBtn.style.backgroundColor = "#00FF66";
+                    mainBtn.style.color = "#000";
+                    mainBtn.innerHTML = "🚀 Open Movie Dashboard";
+                }
+            } else {
+                // If user clicks after Step 4, we close the mini app and notify the bot backend to grant access
+                // This triggers the /start callback with a token
+                tg.sendData("verify_completed"); 
+                tg.close();
+            }
+        }
+
+        function joinChannel() {
+            tg.openTelegramLink('https://t.me/YourChannelUsername'); // Put your channel username here
+        }
+
+        function howToUse() {
+            tg.showAlert("Click 'Watch Ads' 4 times. Each click generates a session validation sequence. Once completed, your search access unlocks automatically for 2 hours!");
+        }
+    </script>
+</body>
+</html>
