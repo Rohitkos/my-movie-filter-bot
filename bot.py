@@ -1,15 +1,15 @@
+import asyncio
 import os
 import re
 import time
-from pyrogram import Client, filters
-import asyncio
 
 # Fix for "RuntimeError: There is no current event loop" on newer Python runtimes
 try:
     asyncio.get_event_loop()
 except RuntimeError:
     asyncio.set_event_loop(asyncio.new_event_loop())
-# ==================== CONFIGURATION ====================
+
+from pyrogram import Client, filters
 API_ID = 35493210
 API_HASH = "9dbbafd97493ad43740a10fa4b24c201"
 
