@@ -1,15 +1,16 @@
+import os
 import re
 import time
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from motor.motor_asyncio import AsyncIOMotorClient
 
 # ==================== CONFIGURATION ====================
 API_ID = 35493210
 API_HASH = "9dbbafd97493ad43740a10fa4b24c201"
-BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN_HERE" 
-MONGO_URL = "mongodb+srv://botuser:Rohit1432@cluster0.dyfqmqr.mongodb.net/?appName=Cluster0"
-MONETAG_LINK = "YOUR_MONETAG_SMARTLINK_HERE"
+
+# NO HARDCODED TOKENS OR DB LINKS HERE!
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+MONGO_URL = os.environ.get("MONGO_URL")
+MONETAG_LINK = os.environ.get("MONETAG_LINK")
 
 # Database and Clients Setup
 mongo_client = AsyncIOMotorClient(MONGO_URL)
