@@ -2,18 +2,25 @@ import asyncio
 import os
 import re
 import time
+import threading
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
-# Fix for "RuntimeError: There is no current event loop" on newer Python runtimes
+# 1. Force the event loop to initialize BEFORE Pyrogram loads
 try:
     asyncio.get_event_loop()
 except RuntimeError:
     asyncio.set_event_loop(asyncio.new_event_loop())
 
+# 2. Complete and Correct Imports (Fixes NameError & Missing Button Classes)
 from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from motor.motor_asyncio import AsyncIOMotorClient
+
+# ==================== CONFIGURATION ====================
 API_ID = 35493210
 API_HASH = "9dbbafd97493ad43740a10fa4b24c201"
 
-# NO HARDCODED TOKENS OR DB LINKS HERE!
+# Safe runtime variable extraction
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGO_URL = os.environ.get("MONGO_URL")
 MONETAG_LINK = os.environ.get("MONETAG_LINK")
@@ -58,12 +65,11 @@ def generate_pages(results, page, query, lang=None):
     text += f"» **TOTAL FILES** : {total_items}\n\n» **Requested Files** 👇\n\n"
     
     for item in paginated_items:
-        # Format human-readable file sizes
         size_gb = round(item['file_size'] / (1024 * 1024 * 1024), 2)
         size_str = f"{size_gb} GB" if size_gb >= 1 else f"{round(item['file_size']/(1024*1024), 2)} MB"
         
         # Deep links back to the bot
-        text += f"📁 [{size_str} ▷ {item['file_name']}](t.me/{app.me.username}?start=dl_{item['file_id']})\n\n"
+        text += f"📁 [{size_str} ▷ {item['file_name']}](t.me/{app.name}?start=dl_{item['file_id']})\n\n"
         
     lang_str = lang if lang else "none"
     filter_buttons = [
@@ -91,7 +97,7 @@ async def start(client, message):
     if len(cmd_args) > 1:
         data = cmd_args[1]
         
-        # Verification callback from Monetag
+        # Verification callback from Mini App / Monetag
         if data.startswith("verify_"):
             await users_col.update_one({"user_id": user_id}, {"$set": {"token_time": time.time()}}, upsert=True)
             await message.reply_text("✅ **Access Granted! You can download files without ads for 2 hours.**")
@@ -103,12 +109,12 @@ async def start(client, message):
             if await has_active_token(user_id):
                 await message.reply_document(document=file_id, caption="Thank you for using our bot! Enjoy your movie.")
             else:
-                bypass_url = f"{MONETAG_LINK}?token_verify={user_id}&redirect=t.me/{client.me.username}?start=verify_{user_id}"
+                bypass_url = f"{MONETAG_LINK}?token_verify={user_id}&redirect=t.me/{client.name}?start=verify_{user_id}"
                 btn = InlineKeyboardMarkup([[InlineKeyboardButton("🔓 Unlock Download Link (Watch Ad)", url=bypass_url)]])
                 await message.reply_text("⚠️ **Your 2-Hour Download Session has expired or is invalid.**\n\nPlease click the button below to reactivate your access.", reply_markup=btn)
             return
 
-    await message.reply_text(f"Hello {message.from_user.mention},\n\nWelcome to our bot we can download any movie hear. Just type the movie name to search!")
+    await message.reply_text(f"Hello {message.from_user.mention},\n\nWelcome to our movie engine box. Just type any movie name to search available files!")
 
 @app.on_message(filters.text & filters.private)
 async def search(client, message):
@@ -196,23 +202,17 @@ async def index_channel(client, message):
             
     await status.edit_text(f"🏁 **Indexing Completed!** Successfully cached {count} files into your database.")
 
-print("Bot engine is online!")
-app.run()
-# ==================== RENDER FREE TIER PORT BINDING FIX ====================
-import threading
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-
+# ==================== RENDER WEB SERVER HOOK ====================
 def run_dummy_server():
-    # Render passes a dynamic port variable. We bind to it to keep the free tier live!
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), SimpleHTTPRequestHandler)
-    print(f"🌍 Dummy Web Server listening on port {port} to pass Render health check.")
+    print(f"🌍 Dummy Web Server running on port {port}.")
     server.serve_forever()
 
 if __name__ == "__main__":
-    # Start the web server in a background thread so it doesn't block your Telegram Bot
+    # Start the web port checker in a background thread to keep the Free tier alive
     threading.Thread(target=run_dummy_server, daemon=True).start()
     
-    # Start your Pyrogram bot engine 
-    print("🚀 Bot engine is starting...")
+    # Run the core bot engine application safely
+    print("Bot engine is online!")
     app.run()
