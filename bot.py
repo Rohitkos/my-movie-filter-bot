@@ -192,3 +192,21 @@ async def index_channel(client, message):
 
 print("Bot engine is online!")
 app.run()
+# ==================== RENDER FREE TIER PORT BINDING FIX ====================
+import threading
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+
+def run_dummy_server():
+    # Render passes a dynamic port variable. We bind to it to keep the free tier live!
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), SimpleHTTPRequestHandler)
+    print(f"🌍 Dummy Web Server listening on port {port} to pass Render health check.")
+    server.serve_forever()
+
+if __name__ == "__main__":
+    # Start the web server in a background thread so it doesn't block your Telegram Bot
+    threading.Thread(target=run_dummy_server, daemon=True).start()
+    
+    # Start your Pyrogram bot engine 
+    print("🚀 Bot engine is starting...")
+    app.run()
